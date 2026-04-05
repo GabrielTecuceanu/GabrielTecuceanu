@@ -19,8 +19,11 @@
 
 <p>I am currently working on: <a href="https://github.com/GabrielTecuceanu/tsman">tsman</a>, a rust-based tmux session manager that I use in my daily workflow.</p>
 
-<div align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=GabrielTecuceanu&theme=dracula&hide_border=true" width="100%"/>
-  <!-- <img src="https://github-readme-stats.vercel.app/api?username=GabrielTecuceanu&theme=dracula&show_icons=true&hide_border=true&count_private=true" height="170" /> -->
-  <!-- <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=GabrielTecuceanu&theme=dracula&show_icons=true&hide_border=true&layout=compact" height="170" /> -->
+<!-- <div align="center"> -->
+<div>
+
+<a href="https://awesome-github-stats.azurewebsites.net/index.html??cardType=level&theme=dark&fontFamily=&preferLogin=false&Points.IndirectStars=0">    
+    <img  alt="My Stats" src="https://awesome-github-stats.azurewebsites.net/user-stats/GabrielTecuceanu?cardType=level&theme=dark&fontFamily=&preferLogin=false&Points.IndirectStars=0" /> 
+</a>
+
 </p>
