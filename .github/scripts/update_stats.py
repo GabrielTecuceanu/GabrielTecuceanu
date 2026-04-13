@@ -61,7 +61,7 @@ def graphql(query, variables):
         return json.loads(resp.read())
 
 
-def calculate_streak(weeks):
+def calculate_streaks(weeks):
     days = []
     for week in weeks:
         for day in week["contributionDays"]:
@@ -69,55 +69,88 @@ def calculate_streak(weeks):
     days.sort(key=lambda x: x[0], reverse=True)
 
     today = datetime.date.today().isoformat()
-    yesterday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
 
-    # Start counting only if contributed today or yesterday
     if days and days[0][1] == 0 and days[0][0] == today:
         days = days[1:]
 
-    streak = 0
-    for date, count in days:
+    current = 0
+    for _, count in days:
         if count > 0:
-            streak += 1
+            current += 1
         else:
             break
-    return streak
+
+    max_streak = 0
+    running = 0
+    for _, count in days:
+        if count > 0:
+            running += 1
+            max_streak = max(max_streak, running)
+        else:
+            running = 0
+
+    return current, max_streak
 
 
 def calculate_rank(stars, commits, prs, issues, followers):
-    weights = {
-        "stars": 4,
-        "commits": 2,
-        "prs": 3,
-        "issues": 1,
+    # Based on github-readme-stats methodology:
+    # normalize each metric via CDF, compute weighted percentile
+    MEDIANS = {
+        "commits":   250,
+        "prs":        50,
+        "issues":     25,
+        "stars":      50,
+        "followers":  10,
+    }
+    WEIGHTS = {
+        "commits":   2,
+        "prs":       3,
+        "issues":    1,
+        "stars":     4,
         "followers": 1,
     }
+    TOTAL_WEIGHT = sum(WEIGHTS.values())
 
-    score = (
-        stars * weights["stars"]
-        + commits * weights["commits"]
-        + prs * weights["prs"]
-        + issues * weights["issues"]
-        + followers * weights["followers"]
+    def exp_cdf(x):
+        return 1 - 2 ** (-x)
+
+    def log_cdf(x):
+        return x / (1 + x)
+
+    metrics = {
+        "commits":   (commits,   exp_cdf),
+        "prs":       (prs,       exp_cdf),
+        "issues":    (issues,    exp_cdf),
+        "stars":     (stars,     log_cdf),
+        "followers": (followers, log_cdf),
+    }
+
+    weighted_sum = sum(
+        WEIGHTS[k] * cdf(value / MEDIANS[k])
+        for k, (value, cdf) in metrics.items()
     )
 
+    percentile = (1 - weighted_sum / TOTAL_WEIGHT) * 100
+
     thresholds = [
-        (800,  "S"),
-        (600,  "A+"),
-        (400,  "A"),
-        (250,  "B+"),
-        (150,  "B"),
-        (50,   "C+"),
+        (1,    "S"),
+        (12.5, "A+"),
+        (25,   "A"),
+        (37.5, "A-"),
+        (50,   "B+"),
+        (62.5, "B"),
+        (75,   "B-"),
+        (87.5, "C+"),
     ]
 
-    for threshold, rank in thresholds:
-        if score >= threshold:
-            return rank
+    for cutoff, grade in thresholds:
+        if percentile <= cutoff:
+            return grade
 
     return "C"
 
 
-def top_languages(repos, top_n=5):
+def top_languages(repos, top_n=6):
     lang_bytes = {}
     for repo in repos:
         for edge in repo["languages"]["edges"]:
@@ -146,7 +179,7 @@ def build_terminal(data):
     prs = user["pullRequests"]["totalCount"]
     issues = user["issues"]["totalCount"]
     followers = user["followers"]["totalCount"]
-    streak = calculate_streak(
+    streak, max_streak = calculate_streaks(
         user["contributionsCollection"]["contributionCalendar"]["weeks"]
     )
     rank = calculate_rank(stars, commits, prs, issues, followers)
@@ -156,43 +189,46 @@ def build_terminal(data):
     for name, pct in langs:
         lang_lines += f"  {name:<12} {bar(pct)}  {pct}%\n"
 
-    terminal = f"""\
-```bash
-gabriel@github:~$ cat flower.txt
-
-                .--.
-              .'_\\/_'.
-              '. /\\ .'
-                "||"
-                 || /\\
-              /\\ ||//\\)
-             (/\\\\||/
-          ______\\||/_______
-
-gabriel@github:~$ cat about.txt
-
-  Hello, I am Gabi.
-
-  I like neovim and low-level programming.
-
-  Currently Reading:     Gödel, Escher, Bach: An Eternal Golden Braid
-  CUrrently Working on:  tsman - a rust-based tmux session manager
-
-gabriel@github:~$ cat stats.txt
-
-  Stars       {bar(min(stars/200*100,100))}  {stars}
-  Commits     {bar(min(commits/500*100,100))}  {commits}  (this year)
-  PRs         {bar(min(prs/100*100,100))}  {prs}
-  Issues      {bar(min(issues/50*100,100))}  {issues}
-  Followers   {bar(min(followers/50*100,100))}  {followers}
-  Streak      {bar(min(streak/30*100,100))}  {streak} days
-  Rank        {rank}
-
-gabriel@github:~$ cat languages.txt
-
-{lang_lines}
-gabriel@github:~$ \
-```"""
+    terminal = (
+        "```bash\n"
+        "gabriel@github:~$ cat flower.txt\n"
+        "\n"
+        "                .--.\n"
+        "              .'_\\/_'.\n"
+        "              '. /\\ .'\n"
+        '                "||"\n'
+        "                 || /\\\n"
+        "              /\\ ||//\\)\n"
+        "             (/\\\\||/\n"
+        "          ______\\||/_______\n"
+        "\n"
+        "gabriel@github:~$ cat about.txt\n"
+        "\n"
+        "  Hello, I am Gabi.\n"
+        "\n"
+        "  I like neovim and low-level programming.\n"
+        "\n"
+        "  Currently Reading:     Gödel, Escher, Bach: An Eternal Golden Braid\n"
+        "  Currently Working on:  tsman - a rust-based tmux session manager\n"
+        "\n"
+        "gabriel@github:~$ cat stats.txt\n"
+        "\n"
+        f"  Stars       {bar(min(stars/200*100,100))}  {stars}\n"
+        f"  Commits     {bar(min(commits/500*100,100))}  {commits}  (this year)\n"
+        f"  PRs         {bar(min(prs/100*100,100))}  {prs}\n"
+        f"  Issues      {bar(min(issues/50*100,100))}  {issues}\n"
+        f"  Followers   {bar(min(followers/50*100,100))}  {followers}\n"
+        f"  Rank        {rank}\n"
+        "\n"
+        f"  Streak      {bar(min(streak/30*100,100))}  {streak} days\n"
+        f"  Max Streak  {bar(min(max_streak/30*100,100))}  {max_streak} days\n"
+        "\n"
+        "gabriel@github:~$ cat languages.txt\n"
+        "\n"
+        + lang_lines
+        + "gabriel@github:~$ \n"
+        "```"
+    )
     return terminal
 
 
