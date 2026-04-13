@@ -226,7 +226,7 @@ def build_terminal(data):
         "gabriel@github:~$ cat languages.txt\n"
         "\n"
         + lang_lines
-        + "gabriel@github:~$ \n"
+        + "gabriel@github:~$ systemctl sleep\n"
         "```"
     )
     return terminal
