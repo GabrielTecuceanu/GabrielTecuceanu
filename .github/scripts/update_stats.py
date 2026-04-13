@@ -59,6 +59,7 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
 
 def graphql(query, variables):
     payload = json.dumps({"query": query, "variables": variables}).encode()
+
     req = urllib.request.Request(
         "https://api.github.com/graphql",
         data=payload,
@@ -67,6 +68,7 @@ def graphql(query, variables):
             "Content-Type": "application/json",
         },
     )
+
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read())
 
@@ -75,6 +77,7 @@ def fetch_total_commits(login, created_at):
     joined_year = int(created_at[:4])
     current_year = datetime.date.today().year
     total = 0
+
     for year in range(joined_year, current_year + 1):
         data = graphql(YEAR_QUERY, {
             "login": login,
@@ -83,14 +86,17 @@ def fetch_total_commits(login, created_at):
         })
         c = data["data"]["user"]["contributionsCollection"]
         total += c["totalCommitContributions"] + c["restrictedContributionsCount"]
+
     return total
 
 
 def calculate_streaks(weeks):
     days = []
+
     for week in weeks:
         for day in week["contributionDays"]:
             days.append((day["date"], day["contributionCount"]))
+
     days.sort(key=lambda x: x[0], reverse=True)
 
     today = datetime.date.today().isoformat()
@@ -127,6 +133,7 @@ def calculate_rank(stars, commits, prs, issues, followers):
         "stars":      50,
         "followers":  10,
     }
+
     WEIGHTS = {
         "commits":   2,
         "prs":       3,
@@ -134,6 +141,7 @@ def calculate_rank(stars, commits, prs, issues, followers):
         "stars":     4,
         "followers": 1,
     }
+
     TOTAL_WEIGHT = sum(WEIGHTS.values())
 
     def exp_cdf(x):
@@ -197,18 +205,26 @@ def build_terminal(data):
     user = data["data"]["user"]
 
     stars = sum(r["stargazerCount"] for r in user["repositories"]["nodes"])
+
     commits_this_year = (
         user["contributionsCollection"]["totalCommitContributions"]
         + user["contributionsCollection"]["restrictedContributionsCount"]
     )
+
     commits_total = fetch_total_commits(USERNAME, user["createdAt"])
+
     prs = user["pullRequests"]["totalCount"]
+
     issues = user["issues"]["totalCount"]
+
     followers = user["followers"]["totalCount"]
+
     streak, max_streak = calculate_streaks(
         user["contributionsCollection"]["contributionCalendar"]["weeks"]
     )
+
     rank = calculate_rank(stars, commits_this_year, prs, issues, followers)
+
     langs = top_languages(user["repositories"]["nodes"])
 
     lang_lines = ""
@@ -217,7 +233,7 @@ def build_terminal(data):
 
     terminal = (
         "```bash\n"
-        "gabriel@github:~$ cat flower.txt\n"
+        "➜ GabrielTecuceanu git:(main) ✗ cat flower.txt\n"
         "\n"
         "                .--.\n"
         "              .'_\\/_'.\n"
@@ -228,7 +244,7 @@ def build_terminal(data):
         "             (/\\\\||/\n"
         "          ______\\||/_______\n"
         "\n"
-        "gabriel@github:~$ cat about.txt\n"
+        "➜ GabrielTecuceanu git:(main) ✗ cat about.txt\n"
         "\n"
         "  Hello, I am Gabi.\n"
         "\n"
@@ -237,10 +253,10 @@ def build_terminal(data):
         "  Currently Reading:     Gödel, Escher, Bach: An Eternal Golden Braid\n"
         "  Currently Working on:  tsman, a rust-based tmux session manager\n"
         "\n"
-        "gabriel@github:~$ cat stats.txt\n"
+        "➜ GabrielTecuceanu git:(main) ✗ cat stats.txt\n"
         "\n"
         f"  Stars       {bar(min(stars/200*100,100))}  {stars}\n"
-        f"  Commits     {bar(min(commits_total/2000*100,100))}  {commits_total}  (total) / {commits_this_year}  (this year)\n"
+        f"  Commits     {bar(min(commits_this_year/500*100,100))}  {commits_this_year}  (this year) / {commits_total}  (total)\n"
         f"  PRs         {bar(min(prs/100*100,100))}  {prs}\n"
         f"  Issues      {bar(min(issues/50*100,100))}  {issues}\n"
         f"  Followers   {bar(min(followers/50*100,100))}  {followers}\n"
@@ -249,12 +265,13 @@ def build_terminal(data):
         f"  Streak      {bar(min(streak/30*100,100))}  {streak} days\n"
         f"  Max Streak  {bar(min(max_streak/30*100,100))}  {max_streak} days\n"
         "\n"
-        "gabriel@github:~$ cat languages.txt\n"
+        "➜ GabrielTecuceanu git:(main) ✗ cat languages.txt\n"
         "\n"
-        + lang_lines
-        + "gabriel@github:~$ systemctl sleep\n"
+        + lang_lines + "\n"
+        + "➜ GabrielTecuceanu git:(main) ✗ systemctl sleep\n"
         "```"
     )
+
     return terminal
 
 
