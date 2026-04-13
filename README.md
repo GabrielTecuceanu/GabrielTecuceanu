@@ -18,17 +18,19 @@ gabriel@github:~$ cat about.txt
   I like neovim and low-level programming.
 
   Currently Reading:     Gödel, Escher, Bach: An Eternal Golden Braid
-  CUrrently Working on:  tsman - a rust-based tmux session manager
+  Currently Working on:  tsman - a rust-based tmux session manager
 
 gabriel@github:~$ cat stats.txt
 
   Stars       ███░░░░░░░  69
-  Commits     ██████████  761  (this year)
+  Commits     ██████████  762  (this year)
   PRs         █████░░░░░  51
   Issues      ██░░░░░░░░  8
   Followers   █░░░░░░░░░  5
+  Rank        B+
+
   Streak      ░░░░░░░░░░  1 days
-  Rank        S
+  Max Streak  ████░░░░░░  12 days
 
 gabriel@github:~$ cat languages.txt
 
@@ -37,6 +39,7 @@ gabriel@github:~$ cat languages.txt
   Svelte       ██░░░░░░░░  17.7%
   Java         █░░░░░░░░░  9.4%
   Go           █░░░░░░░░░  5.5%
-
-gabriel@github:~$ ```
+  C++          ░░░░░░░░░░  2.9%
+gabriel@github:~$ systemctl sleep
+```
 <!-- TERMINAL_END -->
