@@ -12,6 +12,7 @@ USERNAME = "GabrielTecuceanu"
 QUERY = """
 query($login: String!) {
   user(login: $login) {
+    createdAt
     followers { totalCount }
     repositories(first: 100, ownerAffiliations: OWNER, isFork: false) {
       nodes {
@@ -29,10 +30,6 @@ query($login: String!) {
       totalPullRequestContributions
       totalIssueContributions
       restrictedContributionsCount
-    }
-    pullRequests(states: MERGED) { totalCount }
-    issues { totalCount }
-    contributionsCollection {
       contributionCalendar {
         weeks {
           contributionDays {
@@ -41,6 +38,19 @@ query($login: String!) {
           }
         }
       }
+    }
+    pullRequests(states: MERGED) { totalCount }
+    issues { totalCount }
+  }
+}
+"""
+
+YEAR_QUERY = """
+query($login: String!, $from: DateTime!, $to: DateTime!) {
+  user(login: $login) {
+    contributionsCollection(from: $from, to: $to) {
+      totalCommitContributions
+      restrictedContributionsCount
     }
   }
 }
@@ -59,6 +69,21 @@ def graphql(query, variables):
     )
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read())
+
+
+def fetch_total_commits(login, created_at):
+    joined_year = int(created_at[:4])
+    current_year = datetime.date.today().year
+    total = 0
+    for year in range(joined_year, current_year + 1):
+        data = graphql(YEAR_QUERY, {
+            "login": login,
+            "from": f"{year}-01-01T00:00:00Z",
+            "to":   f"{year}-12-31T23:59:59Z",
+        })
+        c = data["data"]["user"]["contributionsCollection"]
+        total += c["totalCommitContributions"] + c["restrictedContributionsCount"]
+    return total
 
 
 def calculate_streaks(weeks):
@@ -172,17 +197,18 @@ def build_terminal(data):
     user = data["data"]["user"]
 
     stars = sum(r["stargazerCount"] for r in user["repositories"]["nodes"])
-    commits = (
+    commits_this_year = (
         user["contributionsCollection"]["totalCommitContributions"]
         + user["contributionsCollection"]["restrictedContributionsCount"]
     )
+    commits_total = fetch_total_commits(USERNAME, user["createdAt"])
     prs = user["pullRequests"]["totalCount"]
     issues = user["issues"]["totalCount"]
     followers = user["followers"]["totalCount"]
     streak, max_streak = calculate_streaks(
         user["contributionsCollection"]["contributionCalendar"]["weeks"]
     )
-    rank = calculate_rank(stars, commits, prs, issues, followers)
+    rank = calculate_rank(stars, commits_this_year, prs, issues, followers)
     langs = top_languages(user["repositories"]["nodes"])
 
     lang_lines = ""
@@ -209,12 +235,12 @@ def build_terminal(data):
         "  I like neovim and low-level programming.\n"
         "\n"
         "  Currently Reading:     Gödel, Escher, Bach: An Eternal Golden Braid\n"
-        "  Currently Working on:  tsman - a rust-based tmux session manager\n"
+        "  Currently Working on:  tsman, a rust-based tmux session manager\n"
         "\n"
         "gabriel@github:~$ cat stats.txt\n"
         "\n"
         f"  Stars       {bar(min(stars/200*100,100))}  {stars}\n"
-        f"  Commits     {bar(min(commits/500*100,100))}  {commits}  (this year)\n"
+        f"  Commits     {bar(min(commits_total/2000*100,100))}  {commits_total}  (total) / {commits_this_year}  (this year)\n"
         f"  PRs         {bar(min(prs/100*100,100))}  {prs}\n"
         f"  Issues      {bar(min(issues/50*100,100))}  {issues}\n"
         f"  Followers   {bar(min(followers/50*100,100))}  {followers}\n"
