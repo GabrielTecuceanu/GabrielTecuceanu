@@ -29,7 +29,7 @@
   Followers   █░░░░░░░░░  5
   Rank        B+
 
-  Streak      █░░░░░░░░░  3 days
+  Streak      ░░░░░░░░░░  0 days
   Max Streak  ████░░░░░░  12 days
 
 ➜ GabrielTecuceanu git:(main) ✗ cat languages.txt
