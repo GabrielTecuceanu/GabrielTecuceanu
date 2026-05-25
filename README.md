@@ -23,23 +23,23 @@
 ➜ GabrielTecuceanu git:(main) ✗ cat stats.txt
 
   Stars       ████░░░░░░  73
-  Commits     ██████████  794  (this year) / 1220  (total)
+  Commits     ██████████  805  (this year) / 1231  (total)
   PRs         █████░░░░░  53
   Issues      ███░░░░░░░  15
   Followers   █░░░░░░░░░  5
   Rank        B+
 
-  Streak      ░░░░░░░░░░  0 days
+  Streak      █░░░░░░░░░  2 days
   Max Streak  ████░░░░░░  12 days
 
 ➜ GabrielTecuceanu git:(main) ✗ cat languages.txt
 
-  C            █████░░░░░  45.6%
-  Rust         ██░░░░░░░░  17.8%
-  Python       █░░░░░░░░░  12.1%
-  Svelte       █░░░░░░░░░  9.6%
-  Java         █░░░░░░░░░  5.1%
-  Go           ░░░░░░░░░░  3.0%
+  C            ██████████  98.2%
+  Python       ░░░░░░░░░░  0.8%
+  Rust         ░░░░░░░░░░  0.3%
+  C++          ░░░░░░░░░░  0.2%
+  Svelte       ░░░░░░░░░░  0.2%
+  Java         ░░░░░░░░░░  0.1%
 
 ➜ GabrielTecuceanu git:(main) ✗ systemctl sleep
 ```
