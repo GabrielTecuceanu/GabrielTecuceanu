@@ -23,13 +23,13 @@
 ➜ GabrielTecuceanu git:(main) ✗ cat stats.txt
 
   Stars       ████░░░░░░  73
-  Commits     ██████████  805  (this year) / 1231  (total)
+  Commits     ██████████  809  (this year) / 1235  (total)
   PRs         █████░░░░░  53
   Issues      ███░░░░░░░  15
   Followers   █░░░░░░░░░  5
   Rank        B+
 
-  Streak      █░░░░░░░░░  2 days
+  Streak      █░░░░░░░░░  3 days
   Max Streak  ████░░░░░░  12 days
 
 ➜ GabrielTecuceanu git:(main) ✗ cat languages.txt
