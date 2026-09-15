@@ -35,9 +35,9 @@
 ➜ GabrielTecuceanu git:(main) ✗ cat languages.txt
 
   Rust         ███░░░░░░░  32.3%
-  Python       ██░░░░░░░░  21.5%
+  Python       ██░░░░░░░░  21.4%
   Svelte       ██░░░░░░░░  17.0%
-  Java         █░░░░░░░░░  9.1%
+  Java         █░░░░░░░░░  9.0%
   Go           █░░░░░░░░░  5.3%
   TypeScript   ░░░░░░░░░░  3.4%
 
